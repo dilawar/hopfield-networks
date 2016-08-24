@@ -6,10 +6,8 @@ import           Control.Arrow
 import           Control.Monad
 import           Control.Monad.Random     hiding (fromList)
 import           Data.List.Split
-import           Data.Packed.Matrix
-import           Data.Packed.Vector
 import           MachineLearning.Hopfield
-import           Numeric.Container
+import           Numeric.LinearAlgebra.HMatrix
 import           System.Console.CmdArgs
 
 -- Height and widght of the patterns we are training on
@@ -17,7 +15,7 @@ width, height :: Int
 width = 6
 height = 7
 
-patterns :: Matrix Float
+patterns :: Matrix Double
 patterns = fromRows [x, o]
   where
     x = fromList
@@ -37,21 +35,22 @@ patterns = fromRows [x, o]
          1 , -1, -1, -1, -1, 1,
          1 , 1, 1, 1, 1, 1]
 
-randomCorruption :: MonadRandom m => Float -> Vector Float -> m (Vector Float)
+randomCorruption :: MonadRandom m => Double -> Vector Double -> m (Vector Double)
 randomCorruption proportion pattern = liftM (pattern //) mutations
      where
-       numMutations = (floor . (proportion *) . fromIntegral . dim) pattern
+       numMutations = (floor . (proportion *) . fromIntegral . size) pattern
        mutationStream = liftM2 zip
-                        (getRandomRs (0, dim pattern - 1))
-                        (getRandomRs (-1.0 :: Float, 1.0 :: Float))
+                        (getRandomRs (0, size pattern - 1))
+                        (getRandomRs (-1.0 :: Double, 1.0 :: Double))
        mutations =
            liftM (take numMutations . map (second activity)) mutationStream
 
 -- | Squared distance in L^2
-squaredDistance :: Vector Float -> Vector Float -> Float
-squaredDistance = norm2 .* sub where (.*) = (.) . (.) -- Gratuitously pointfree
+squaredDistance :: Vector Double -> Vector Double -> Double
+{-squaredDistance = norm_2 .* sub where (.*) = (.) . (.) -- Gratuitously pointfree-}
+squaredDistance v1 v2 = norm_2 $ v1 - v2
 
-validate :: HopfieldNet -> Int -> Float -> Vector Float -> IO ()
+validate :: HopfieldNet -> Int -> Double -> Vector Double -> IO ()
 validate trained iterations corruptionLevel pattern =
     do
       corrupted <- evalRandIO $ randomCorruption corruptionLevel pattern
@@ -68,7 +67,7 @@ validate trained iterations corruptionLevel pattern =
     where
       reproduce = associate trained iterations
 
-displayPattern :: Vector Float -> IO ()
+displayPattern :: Vector Double -> IO ()
 displayPattern pattern =
     do
       putStrLn divider
@@ -85,7 +84,7 @@ displayPattern pattern =
 
 -- Command line parsing
 data HopfieldArgs = HopfieldArgs { _numIterations  :: Int
-                                 , _corruptionRate :: Float
+                                 , _corruptionRate :: Double
                                  } deriving (Show, Data, Typeable)
 
 runSimulation :: HopfieldArgs -> IO ()
