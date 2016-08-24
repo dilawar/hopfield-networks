@@ -9,6 +9,7 @@ import           Data.List.Split
 import           MachineLearning.Hopfield
 import           Numeric.LinearAlgebra.HMatrix
 import           System.Console.CmdArgs
+import qualified Data.Vector.Storable as V
 
 -- Height and widght of the patterns we are training on
 width, height :: Int
@@ -47,8 +48,8 @@ randomCorruption proportion pattern = liftM (pattern //) mutations
 
 -- | Squared distance in L^2
 squaredDistance :: Vector Double -> Vector Double -> Double
-{-squaredDistance = norm_2 .* sub where (.*) = (.) . (.) -- Gratuitously pointfree-}
-squaredDistance v1 v2 = norm_2 $ v1 - v2
+squaredDistance = norm_2 .* (-) where (.*) = (.) . (.) -- Gratuitously pointfree
+{-squaredDistance v1 v2 = (V.sum $ V.zipWith (\x y -> (x - y)**2.0) v1 v2) ** 0.5-}
 
 validate :: HopfieldNet -> Int -> Double -> Vector Double -> IO ()
 validate trained iterations corruptionLevel pattern =

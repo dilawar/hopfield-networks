@@ -56,7 +56,7 @@ train HopfieldNet{..}  patterns = HopfieldNet state (add weights updates)
       scalingFactor = 1.0 / fromIntegral (rows patterns)
       -- NOTE: build function called above truns index into Float type. Before
       -- indexing, they should be cast into Int
-      weight' fi fj = weight (ceiling fi) (ceiling fj)
+      weight' fi fj = weight (floor fi) (floor fj)
       weight :: Int -> Int -> Double
       weight i j = (toColumns patterns !! i) 
                      <.> (toColumns patterns !! j)

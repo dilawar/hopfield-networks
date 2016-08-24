@@ -53,4 +53,5 @@ executable hopfield_demonstration
         hmatrix,
         MonadRandom,
         split,
+        vector,
         cmdargs
